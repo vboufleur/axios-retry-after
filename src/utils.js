@@ -10,17 +10,11 @@ export function isRetryable (error) {
 }
 
 export function wait (error) {
-  const retryAfter = error.response.headers['retry-after']
-
-  let timeToWait
-  // If Retry-After is a non-negative decimal integer indicating the seconds
-  // to delay after the response is received
-  if (Number.isInteger(parseInt(retryAfter))) {
-    timeToWait = parseInt(retryAfter) * 1000
-  } else {
-    // If Retry-After is a date after which to retry
-    timeToWait = parseInt(new Date(retryAfter).getTime() - new Date(Date.now()).getTime())
-  }
+  const retryAfter = error.response.headers["retry-after"];
+  const parsedRetryAfter = parseInt(retryAfter);
+  const timeToWait = Number.isNaN(parsedRetryAfter)
+    ? Date.parse(retryAfter) - Date.now()
+    : parsedRetryAfter * 1000;
   return new Promise(
     resolve => setTimeout(resolve, timeToWait)
   )
